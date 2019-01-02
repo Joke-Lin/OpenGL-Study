@@ -1,7 +1,8 @@
-// 画一个基础的三角形
+// 三角形内三原色板
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <cstdlib>
 
 using namespace std;
 
@@ -19,17 +20,21 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 const char *vertexShaderSource =	// 顶点着色器源代码 此处主要处理位置
 "#version 330 core\n"	// 注意OpenGL4版本的GLSL不同
 "layout (location = 0) in vec3 apos;\n"
+"layout (location = 1) in vec3 acolor;\n"
+"out vec3 ourcolor;\n"
 "void main()\n"
 "{\n"
 "	gl_Position = vec4(apos.x,apos.y,apos.z,1.0f);\n"
+"	ourcolor = acolor;\n"
 "}\n\0";
 
 const char *fragmentShaderSource =	// 片段着色器源代码 此处主要设置颜色RGBA
 "#version 330 core\n"
 "out vec4 FragColor;\n"
+"in vec3 ourcolor;\n"
 "void main()\n"
 "{\n"
-"   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+"   FragColor = vec4(ourcolor,1.0f);\n"
 "}\n\0";
 
 
@@ -93,15 +98,14 @@ int main()
 	glDeleteShader(fragmentShader);
 
 	float vertices[] = {
-		0.5f, 0.5f, 0.0f,   // 右上角
-		0.5f, -0.5f, 0.0f,  // 右下角
-		-0.5f, -0.5f, 0.0f, // 左下角
-		-0.5f, 0.5f, 0.0f   // 左上角
+		// 位置              // 颜色
+		 0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   // 右下
+		-0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // 左下
+		 0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // 顶部
 	};
 
 	unsigned int indices[] = { // 注意索引从0开始! 
-		0, 1, 3, // 第一个三角形
-		1, 2, 3  // 第二个三角形
+		0, 1, 2, // 第一个三角形
 	};
 
 	GLuint VAO, VBO, EBO; // 新建VAO以及VBO
@@ -116,12 +120,14 @@ int main()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 	// 设置顶点属性指针 给着色器位置0的属性提供如何解析数据VBO
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0); // 打开属性开关 3，4版本默认打开不同
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
 	glBindBuffer(GL_ARRAY_BUFFER, 0); // 解绑VBO
 	glBindVertexArray(0); // 解绑VAO
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); // 解绑EBO
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // 使用线框模式 GL_LINE => GL_FILL 填充模式
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // 使用线框模式 GL_LINE => GL_FILL 填充模式
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -131,9 +137,10 @@ int main()
 		glUseProgram(shaderProgram); // 使用着色器
 		glBindVertexArray(VAO); // 绑定VAO 其实不用每次绑定 因为这里没有VAO的切换
 		// glDrawArrays(GL_LINE_LOOP,0,5); // 画三角形，从0开始取3个顶点 VAO画法
-		glDrawElements(GL_TRIANGLE_FAN, 6, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLE_FAN, 3, GL_UNSIGNED_INT, 0);
 		glfwSwapBuffers(window);
 		glfwPollEvents();
+		Sleep(100);
 	}
 
 	glfwTerminate();

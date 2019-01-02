@@ -1,4 +1,5 @@
-// 画一个基础的三角形
+// 颜色变化的三角形 Uniform 变量 GLSL
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
@@ -27,9 +28,10 @@ const char *vertexShaderSource =	// 顶点着色器源代码 此处主要处理位置
 const char *fragmentShaderSource =	// 片段着色器源代码 此处主要设置颜色RGBA
 "#version 330 core\n"
 "out vec4 FragColor;\n"
+"uniform vec4 ourcolor;\n"
 "void main()\n"
 "{\n"
-"   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+"   FragColor = ourcolor;\n"
 "}\n\0";
 
 
@@ -93,15 +95,13 @@ int main()
 	glDeleteShader(fragmentShader);
 
 	float vertices[] = {
-		0.5f, 0.5f, 0.0f,   // 右上角
-		0.5f, -0.5f, 0.0f,  // 右下角
-		-0.5f, -0.5f, 0.0f, // 左下角
-		-0.5f, 0.5f, 0.0f   // 左上角
+		 0.5f, -0.5f, 0.0f,  // bottom right
+		-0.5f, -0.5f, 0.0f,  // bottom left
+		 0.0f,  0.5f, 0.0f   // top 
 	};
 
 	unsigned int indices[] = { // 注意索引从0开始! 
-		0, 1, 3, // 第一个三角形
-		1, 2, 3  // 第二个三角形
+		0, 1, 2, // 第一个三角形
 	};
 
 	GLuint VAO, VBO, EBO; // 新建VAO以及VBO
@@ -121,17 +121,21 @@ int main()
 	glBindBuffer(GL_ARRAY_BUFFER, 0); // 解绑VBO
 	glBindVertexArray(0); // 解绑VAO
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); // 解绑EBO
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // 使用线框模式 GL_LINE => GL_FILL 填充模式
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // 使用线框模式 GL_LINE => GL_FILL 填充模式
 
 	while (!glfwWindowShouldClose(window))
 	{
 		processInput(window);
 		glClearColor(0.2f, 0.3f, 0.3f, 0.5f); // 以何种颜色清空
 		glClear(GL_COLOR_BUFFER_BIT);
+		float timeValue = glfwGetTime();
+		float greenValue = (sin(timeValue) / 2.0f) + 0.5f;
+		int vertexColor = glGetUniformLocation(shaderProgram, "ourcolor");
 		glUseProgram(shaderProgram); // 使用着色器
+		glUniform4f(vertexColor, 0.0f, greenValue, 0.0f, 1.0f);
 		glBindVertexArray(VAO); // 绑定VAO 其实不用每次绑定 因为这里没有VAO的切换
 		// glDrawArrays(GL_LINE_LOOP,0,5); // 画三角形，从0开始取3个顶点 VAO画法
-		glDrawElements(GL_TRIANGLE_FAN, 6, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLE_FAN, 3, GL_UNSIGNED_INT, 0);
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}

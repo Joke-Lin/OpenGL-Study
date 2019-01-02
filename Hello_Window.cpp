@@ -1,3 +1,4 @@
+// 新建一个带背景颜色的窗口
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
